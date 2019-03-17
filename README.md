@@ -23,12 +23,8 @@ use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
 
 // Untrusted computation that is deterministic with the exception of an RNG
 // For this example we encrypt a vote for an election using RSA.
-fn untrusted_computation<R: Rng>(
-    rng: &mut R,
-    public_key: &RSAPublicKey,
-    message: &[u8],
-) -> Vec<u8> {
-    let ciphertext = public_key.encrypt(rng, PaddingScheme::PKCS1v15, message).unwrap();
+fn untrusted_computation<R: Rng>(rng: &mut R, key: &RSAPublicKey, message: &[u8]) -> Vec<u8> {
+    let ciphertext = key.encrypt(rng, PaddingScheme::PKCS1v15, message).unwrap();
     return ciphertext;
 };
 
