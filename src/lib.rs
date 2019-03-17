@@ -54,7 +54,7 @@ where
     }
 }
 
-pub fn check_challenge<H: Digest, C>(
+pub fn check_commitment<H: Digest, C>(
     commitment: &[u8],
     revealed_random: &[u8],
     calculation: C,
@@ -74,12 +74,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::check_challenge;
+    use crate::check_commitment;
     use crate::BenalohChallenge;
     use crate::{BenalohRng, CheckRng};
     use rand;
     use rand::Rng;
-    use rand_core::RngCore;
     use sha2::Sha256;
 
     #[test]
@@ -102,7 +101,7 @@ mod tests {
         let revealed = challenge.challenge();
 
         // Check the challenge on a different (trusted) device.
-        check_challenge::<Sha256, _>(&commitment, &revealed, |rng: &mut CheckRng| {
+        check_commitment::<Sha256, _>(&commitment, &revealed, |rng: &mut CheckRng| {
             untrusted_computation(rng, some_foo)
         });
 
