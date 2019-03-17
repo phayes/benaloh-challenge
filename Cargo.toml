@@ -13,4 +13,4 @@ failure = "0.1.5"
 
 [dev-dependencies]
 sha2 = "0.8.0"
-rsa = { git = "https://github.com/phayes/RSA", branch = "get_public"}
+rsa = "0.1.2"
