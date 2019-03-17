@@ -42,7 +42,12 @@ check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
     untrusted_computation(rng, &public_key, vote)
 })?;
 
-// Get the real results, discarding the random factors.
+// In a real voting application, the user would be given the choice to change their vote here.
+
+// Get another commitment
 challenge.commit(&mut hasher);
+
+// We could challenge here again if we wanted
+// but instead we get the results, discarding the random factors.
 let ciphertext = challenge.into_results();
 ```
