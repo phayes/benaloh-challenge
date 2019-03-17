@@ -5,8 +5,8 @@ use rand::Rng;
 use zeroize::Zeroize;
 
 mod rng;
-pub use rng::PlaybackRng as CheckRng;
-pub use rng::RecordingRng as BenalohRng;
+pub use rng::PlaybackRng;
+pub use rng::RecordingRng;
 
 /// Error types
 #[derive(Debug, Fail)]
@@ -19,9 +19,9 @@ pub enum Error {
 
 pub struct Challenge<'a, R: Rng, C>
 where
-    C: Fn(&mut BenalohRng<'a, R>) -> Vec<u8>, // TODO: Return a result.
+    C: Fn(&mut RecordingRng<'a, R>) -> Vec<u8>, // TODO: Return a result.
 {
-    rng: BenalohRng<'a, R>,
+    rng: RecordingRng<'a, R>,
     computation: C,
     result: Vec<u8>,
     cached_random: Vec<u8>,
@@ -30,10 +30,10 @@ where
 
 impl<'a, R: Rng, C> Challenge<'a, R, C>
 where
-    C: Fn(&mut BenalohRng<'a, R>) -> Vec<u8>,
+    C: Fn(&mut RecordingRng<'a, R>) -> Vec<u8>,
 {
     pub fn new(rng: &'a mut R, untrusted_computation: C) -> Self {
-        let recording_rng = BenalohRng::new(rng);
+        let recording_rng = RecordingRng::new(rng);
         Challenge {
             rng: recording_rng,
             computation: untrusted_computation,
@@ -80,9 +80,9 @@ pub fn check_commitment<H: Digest, C>(
     calculation: C,
 ) -> Result<(), Error>
 where
-    C: Fn(&mut CheckRng) -> Vec<u8>,
+    C: Fn(&mut PlaybackRng) -> Vec<u8>,
 {
-    let mut playback = CheckRng::new(revealed_random);
+    let mut playback = PlaybackRng::new(revealed_random);
     let result = (calculation)(&mut playback);
     hasher.input(result);
     if hasher.result_reset().to_vec() != commitment.to_vec() {

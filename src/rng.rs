@@ -70,7 +70,8 @@ impl RngCore for PlaybackRng {
 
   fn fill_bytes(&mut self, dest: &mut [u8]) {
     if self.recorded.len() < dest.len() {
-      panic!("TODO: Good message");
+      // If we are being asked for data beyond the end of our buffer, just fill it with zeroes.
+      self.recorded.append(&mut vec![0u8; dest.len()]);
     }
     let items: Vec<u8> = self.recorded.drain(..dest.len()).collect();
     dest.clone_from_slice(&items);
