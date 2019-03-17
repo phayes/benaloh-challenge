@@ -28,7 +28,7 @@ let public_key = RSAPrivateKey::new(&mut rng, 512).unwrap().extract_public();
 let vote = b"Barak Obama";
 
 let mut challenge = Challenge::new(&mut rng, |rng: _| {
-    untrusted_computation(rng, &public_key, message)
+    untrusted_computation(rng, &public_key, vote)
 });
 
 // Get the commitment
@@ -39,7 +39,7 @@ let revealed = challenge.challenge();
 
 // Check the challenge on a different (trusted) device.
 check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
-    untrusted_computation(rng, &public_key, message)
+    untrusted_computation(rng, &public_key, vote)
 })?;
 
 // Get the real results, discarding the random factors.
