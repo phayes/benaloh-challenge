@@ -1,4 +1,5 @@
 use digest::Digest;
+use failure::Error as FailError;
 use failure::Fail;
 use rand::Rng;
 use zeroize::Zeroize;
@@ -10,13 +11,15 @@ pub use rng::RecordingRng as BenalohRng;
 /// Error types
 #[derive(Debug, Fail)]
 pub enum Error {
-    #[fail(display = "benaloh_challenge: failed verification")]
-    Verification,
+    #[fail(display = "benaloh_challenge: failed verification - commitments do not match")]
+    VerificationFailed,
+    #[fail(display = "benaloh_challenge: failed verification: {}", 0)]
+    VerificationError(FailError),
 }
 
 pub struct Challenge<'a, R: Rng, C>
 where
-    C: Fn(&mut BenalohRng<'a, R>) -> Vec<u8>,
+    C: Fn(&mut BenalohRng<'a, R>) -> Vec<u8>, // TODO: Return a result.
 {
     rng: BenalohRng<'a, R>,
     computation: C,
@@ -83,7 +86,7 @@ where
     let result = (calculation)(&mut playback);
     hasher.input(result);
     if hasher.result_reset().to_vec() != commitment.to_vec() {
-        return Err(Error::Verification);
+        return Err(Error::VerificationFailed);
     }
     Ok(())
 }

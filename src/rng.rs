@@ -1,5 +1,5 @@
 use rand::Rng;
-use rand_core::{impls, Error, RngCore};
+use rand_core::{impls, Error, ErrorKind, RngCore};
 use zeroize::Zeroize;
 
 pub struct RecordingRng<'a, R: Rng> {
@@ -78,7 +78,10 @@ impl RngCore for PlaybackRng {
 
   fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
     if self.recorded.len() < dest.len() {
-      panic!("TODO: Error");
+      Err(Error::new(
+        ErrorKind::Unavailable,
+        "benaloh_challenge: commitment-check read more RNG values than commitment",
+      ))
     } else {
       Ok(self.fill_bytes(dest))
     }
