@@ -11,7 +11,7 @@ use sha2::Sha256;
 use rsa::padding::PaddingScheme;
 use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
 
-// Untrustd computation that is deterministic with the exception of an RNG
+// Untrusted computation that is deterministic with the exception of an RNG
 // For this example we encrypting a vote in an election using RSA.
 fn untrusted_computation<R: Rng>(
     rng: &mut R,
