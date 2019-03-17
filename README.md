@@ -1,4 +1,4 @@
-Implements a Benaloh Challenge, also known as an Interactive Device Challenge, a crytographic technique to ensure the honesty of an untrusted device. Orignially conceived in the context of voting using an electronic device, is useful for all untrusted computations that are deterministic with the exception of using an RNG. Most cryptography fits in this category.
+Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device. Orignially conceived in the context of voting using an electronic device, is useful for all untrusted computations that are deterministic with the exception of using an RNG. Most cryptography fits in this category.
 
 The protocol was invented by Josh Benaloh, and is decribed in detail here: https://www.usenix.org/legacy/event/evt07/tech/full_papers/benaloh/benaloh.pdf
 
