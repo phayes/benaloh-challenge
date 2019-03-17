@@ -78,13 +78,13 @@ pub fn check_commitment<H: Digest, C>(
     hasher: &mut H,
     commitment: &[u8],
     revealed_random: &[u8],
-    calculation: C,
+    untrusted_computation: C,
 ) -> Result<(), Error>
 where
     C: Fn(&mut PlaybackRng) -> Vec<u8>,
 {
     let mut playback = PlaybackRng::new(revealed_random);
-    let result = (calculation)(&mut playback);
+    let result = (untrusted_computation)(&mut playback);
     hasher.input(result);
     if hasher.result_reset().to_vec() != commitment.to_vec() {
         return Err(Error::VerificationFailed);
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn copy_rng_test() -> Result<(), Error> {
         fn untrusted_computation<R: Rng>(rng: &mut R, _foo: i32) -> Vec<u8> {
-            let mut bytes = Vec::with_capacity(8);
+            let mut bytes = vec![0; 8];
             rng.fill_bytes(&mut bytes);
             return bytes.to_vec();
         };
@@ -171,6 +171,35 @@ mod tests {
         challenge.commit(&mut hasher);
         let _ciphertext = challenge.into_results();
 
+        Ok(())
+    }
+
+    #[test]
+    fn cheat_test() -> Result<(), Error> {
+        use crate::PlaybackRng;
+        fn untrusted_computation<R: Rng>(rng: &mut R) -> Vec<u8> {
+            let mut bytes = vec![0; 8];
+            rng.fill_bytes(&mut bytes);
+            return bytes.to_vec();
+        };
+
+        let incrementing = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        let mut rng = PlaybackRng::new(&incrementing);
+        let mut hasher = Sha256::new();
+
+        let mut challenge = Challenge::new(&mut rng, |rng: _| untrusted_computation(rng));
+        let commitment = challenge.commit(&mut hasher);
+        let _revealed = challenge.challenge();
+
+        // Cheat!  Replace revealed with out cheat values.
+        let revealed = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        // Check the challenge on a different (trusted) device.
+        let ok = check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
+            untrusted_computation(rng)
+        });
+
+        assert!(ok.is_err());
         Ok(())
     }
 }
