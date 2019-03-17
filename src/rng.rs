@@ -43,7 +43,8 @@ impl<'a, R: Rng> RngCore for RecordingRng<'a, R> {
   }
 
   fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-    Ok(self.fill_bytes(dest))
+    self.fill_bytes(dest);
+    Ok(())
   }
 }
 
@@ -84,7 +85,8 @@ impl RngCore for PlaybackRng {
         "benaloh_challenge: commitment-check read more RNG values than commitment",
       ))
     } else {
-      Ok(self.fill_bytes(dest))
+      self.fill_bytes(dest);
+      Ok(())
     }
   }
 }

@@ -50,7 +50,8 @@ where
         hasher.input(&self.result);
         let commitment = hasher.result_reset().to_vec();
         self.committed = true;
-        return commitment;
+
+        commitment
     }
 
     pub fn challenge(&mut self) -> Vec<u8> {
