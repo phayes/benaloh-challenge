@@ -41,12 +41,14 @@ where
         return commitment;
     }
 
-    pub fn challenge(mut self) -> Vec<u8> {
+    pub fn challenge(&mut self) -> Vec<u8> {
         self.result.zeroize();
-        self.cached_random
+        let mut cached_random = Vec::new();
+        std::mem::swap(&mut cached_random, &mut self.cached_random);
+        cached_random
     }
 
-    pub fn release_results(mut self) -> Vec<u8> {
+    pub fn into_results(mut self) -> Vec<u8> {
         self.cached_random.zeroize();
         self.result
     }
@@ -82,7 +84,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        fn untrusted_calculation<R: Rng>(rng: &mut R, foo: i32) -> Vec<u8> {
+        fn untrusted_computation<R: Rng>(rng: &mut R, foo: i32) -> Vec<u8> {
             let mut bytes = Vec::with_capacity(8);
             rng.fill_bytes(&mut bytes);
             return bytes.to_vec();
@@ -92,15 +94,18 @@ mod tests {
         let some_foo = 123;
 
         let mut challenge = BenalohChallenge::new(&mut rng, |rng: &mut BenalohRng<_>| {
-            untrusted_calculation(rng, some_foo)
+            untrusted_computation(rng, some_foo)
         });
 
         let commitment = challenge.commit::<Sha256>();
 
         let revealed = challenge.challenge();
 
+        // Check the challenge on a different (trusted) device.
         check_challenge::<Sha256, _>(&commitment, &revealed, |rng: &mut CheckRng| {
-            untrusted_calculation(rng, some_foo)
+            untrusted_computation(rng, some_foo)
         });
+
+        let _results = challenge.into_results();
     }
 }
