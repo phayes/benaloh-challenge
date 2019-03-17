@@ -1,37 +1,44 @@
 use digest::Digest;
 use rand::Rng;
+use rand_core::{impls, Error, RngCore};
 use zeroize::Zeroize;
 
-struct BenalohChallenge<R: Rng, C>
+mod rng;
+pub use rng::PlaybackRng as CheckRng;
+pub use rng::RecordingRng as BenalohRng;
+
+struct BenalohChallenge<'a, R: Rng, C>
 where
-    C: Fn(&mut R) -> Vec<u8>,
+    C: Fn(&mut BenalohRng<'a, R>) -> Vec<u8>,
 {
-    rng: R,
+    rng: BenalohRng<'a, R>,
     calculation: C,
     result: Vec<u8>,
     cached_random: Vec<u8>,
 }
 
-impl<R: Rng, C> BenalohChallenge<R, C>
+impl<'a, R: Rng, C> BenalohChallenge<'a, R, C>
 where
-    C: Fn(&mut R) -> Vec<u8>,
+    C: Fn(&mut BenalohRng<'a, R>) -> Vec<u8>,
 {
-    pub fn new(rng: R, calculation: C) -> Self {
+    pub fn new(rng: &'a mut R, calculation: C) -> Self {
+        let recording_rng = BenalohRng::new(rng);
         BenalohChallenge {
-            rng: rng,
+            rng: recording_rng,
             calculation: calculation,
             result: Vec::<u8>::new(),
             cached_random: Vec::<u8>::new(),
         }
     }
 
-    /// Get the precommitment
-    pub fn precommitment<H: Digest>(&mut self) -> (Vec<u8>, Vec<u8>) {
-        let result = (self.calculation)(&mut self.rng);
+    /// Commit the results and get the commitment
+    pub fn commit<H: Digest>(&mut self) -> Vec<u8> {
+        self.result = (self.calculation)(&mut self.rng);
+        self.cached_random = self.rng.fetch_recorded();
         let mut hasher = H::new();
-        hasher.input(&result);
-        let precommitment = hasher.result().to_vec();
-        return (result, precommitment);
+        hasher.input(&self.result);
+        let commitment = hasher.result().to_vec();
+        return commitment;
     }
 
     pub fn challenge(mut self) -> Vec<u8> {
@@ -45,17 +52,55 @@ where
     }
 }
 
-pub fn check_challenge<R: Rng, C>(precommitment: &[u8], revealed_random: &[u8]) -> Result<(), ()>
+pub fn check_challenge<H: Digest, C>(
+    commitment: &[u8],
+    revealed_random: &[u8],
+    calculation: C,
+) -> Result<(), ()>
 where
-    C: Fn(&mut R) -> Vec<u8>,
+    C: Fn(&mut CheckRng) -> Vec<u8>,
 {
+    let mut playback = CheckRng::new(revealed_random);
+    let result = (calculation)(&mut playback);
+    let mut hasher = H::new();
+    hasher.input(result);
+    if hasher.result().to_vec() != commitment.to_vec() {
+        panic!("TODO: Verification Error");
+    }
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::check_challenge;
+    use crate::BenalohChallenge;
+    use crate::{BenalohRng, CheckRng};
+    use rand;
+    use rand::Rng;
+    use rand_core::RngCore;
+    use sha2::Sha256;
+
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        fn untrusted_calculation<R: Rng>(rng: &mut R, foo: i32) -> Vec<u8> {
+            let mut bytes = Vec::with_capacity(8);
+            rng.fill_bytes(&mut bytes);
+            return bytes.to_vec();
+        };
+
+        let mut rng = rand::thread_rng();
+        let some_foo = 123;
+
+        let mut challenge = BenalohChallenge::new(&mut rng, |rng: &mut BenalohRng<_>| {
+            untrusted_calculation(rng, some_foo)
+        });
+
+        let commitment = challenge.commit::<Sha256>();
+
+        let revealed = challenge.challenge();
+
+        check_challenge::<Sha256, _>(&commitment, &revealed, |rng: &mut CheckRng| {
+            untrusted_calculation(rng, some_foo)
+        });
     }
 }
