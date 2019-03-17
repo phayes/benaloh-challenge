@@ -9,8 +9,7 @@ Implements the Benaloh Challenge (also known as an Interactive Device Challenge)
 
 More details on the protocol can be found here:
  - *Ballot Casting Assurance via Voter-Initiated Poll Station Auditing* by Josh Benaloh, 2007 [[pdf](https://www.usenix.org/legacy/event/evt07/tech/full_papers/benaloh/benaloh.pdf)]
- - *Proof of Vote: An end-to-end verifiable digital voting protocol using distributed ledger
-technology* by Becker et al, 2018 - section 3.2.7 [[pdf](https://github.com/votem/proof-of-vote/raw/master/proof-of-vote-whitepaper.pdf)]
+ - *Proof of Vote* by Becker et al, 2018 - section 3.2.7 [[pdf](https://github.com/votem/proof-of-vote/raw/master/proof-of-vote-whitepaper.pdf)]
 
 ### Example
 
