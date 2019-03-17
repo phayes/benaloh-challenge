@@ -8,38 +8,41 @@ The protocol was invented by Josh Benaloh, and is decribed in detail here: https
 use benaloh_challenge;
 use rand::Rng;
 use sha2::Sha256;
+use rsa::padding::PaddingScheme;
+use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
 
 // Untrustd computation that is deterministic with the exception of an RNG
-// For this example we are just honestly reporting the values of the RNG. 
-fn untrusted_computation<R: Rng>(rng: &mut R) -> Vec<u8> {
-    let mut bytes = Vec::with_capacity(8);
-    rng.fill_bytes(&mut bytes);
-    return bytes.to_vec();
+// For this example we encrypting a vote in an election using RSA.
+fn untrusted_computation<R: Rng>(
+    rng: &mut R,
+    public_key: &RSAPublicKey,
+    message: &[u8],
+) -> Vec<u8> {
+    let ciphertext = public_key.encrypt(rng, PaddingScheme::PKCS1v15, message).unwrap();
+    return ciphertext;
 };
 
 let mut rng = rand::thread_rng();
-let mut challenge = benaloh_challenge::Challenge::new(&mut rng, |rng: &mut BenalohRng<_>| {
-    untrusted_computation(rng)
+let mut hasher = Sha256::new();
+let public_key = RSAPrivateKey::new(&mut rng, 512).unwrap().extract_public();
+let vote = b"Barak Obama";
+
+let mut challenge = Challenge::new(&mut rng, |rng: _| {
+    untrusted_computation(rng, &public_key, message)
 });
 
-// Get a commitment hash of the results of the untrusted computation.
-let commitment = challenge.commit::<Sha256>();
+// Get the commitment
+let commitment = challenge.commit(&mut hasher);
 
-// Flip a coin to see if we will challenge the results, or accept the results.
-
-// Challenge the results, revealing the RNG values used (and invalidating the results)
+// Reveal the secret random factors used in the encryption
 let revealed = challenge.challenge();
 
 // Check the challenge on a different (trusted) device.
-benaloh_challenge::check_commitment::<Sha256, _>(&commitment, &revealed, |rng: &mut CheckRng| {
-    untrusted_computation(rng)
+check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
+    untrusted_computation(rng, &public_key, message)
 })?;
 
-// Get a new commitment
-let commitment = challenge.commit::<Sha256>();
-
-// Flip a coin to see if we will challenge the results again, or accept the results.
-
-// Accept the results
-let results = challenge.into_results();
+// Get the real results, discarding the random factors.
+challenge.commit(&mut hasher);
+let ciphertext = challenge.into_results();
 ```
