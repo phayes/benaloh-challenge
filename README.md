@@ -34,7 +34,7 @@ let mut challenge = benaloh_challenge::Challenge::new(&mut rng, |rng: _| {
 // Get the commitment
 let commitment = challenge.commit(&mut hasher);
 
-// Reveal the secret random factors used in the encryption
+// Reveal the secret random factors used in the encryption. This also invalidates the results.
 let revealed = challenge.challenge();
 
 // Check the commitment on a different (trusted) device.
