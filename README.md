@@ -37,7 +37,7 @@ let commitment = challenge.commit(&mut hasher);
 // Reveal the secret random factors used in the encryption
 let revealed = challenge.challenge();
 
-// Check the challenge on a different (trusted) device.
+// Check the commitment on a different (trusted) device.
 check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
     untrusted_computation(rng, &public_key, vote)
 })?;
