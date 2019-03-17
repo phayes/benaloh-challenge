@@ -27,7 +27,7 @@ let mut hasher = Sha256::new();
 let public_key = RSAPrivateKey::new(&mut rng, 512).unwrap().extract_public();
 let vote = b"Barak Obama";
 
-let mut challenge = Challenge::new(&mut rng, |rng: _| {
+let mut challenge = benaloh_challenge::Challenge::new(&mut rng, |rng: _| {
     untrusted_computation(rng, &public_key, vote)
 });
 
@@ -38,7 +38,7 @@ let commitment = challenge.commit(&mut hasher);
 let revealed = challenge.challenge();
 
 // Check the commitment on a different (trusted) device.
-check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
+benaloh_challenge::check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
     untrusted_computation(rng, &public_key, vote)
 })?;
 
