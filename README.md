@@ -1,3 +1,10 @@
+Benaloh Challenge
+-----------------
+
+[![Build Status](https://travis-ci.org/phayes/benaloh-challenge.svg?branch=master)](https://travis-ci.org/phayes/benaloh-challenge)
+[![codecov](https://codecov.io/gh/phayes/benaloh-challenge/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/benaloh-challenge)
+
+
 Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device. While orignially conceived in the context of voting using an electronic device, it is useful for all untrusted computations that are deterministic with the exception of using an RNG. Most cryptography fits in this category.
 
 The protocol was invented by Josh Benaloh, and is decribed in detail here: https://www.usenix.org/legacy/event/evt07/tech/full_papers/benaloh/benaloh.pdf
