@@ -90,3 +90,60 @@ impl RngCore for PlaybackRng {
     }
   }
 }
+
+mod test {
+  use rand_core::{impls, Error, RngCore};
+
+  #[allow(dead_code)]
+  struct CountingRng {
+    count: u64,
+  }
+
+  impl RngCore for CountingRng {
+    fn next_u32(&mut self) -> u32 {
+      self.next_u64() as u32
+    }
+
+    fn next_u64(&mut self) -> u64 {
+      self.count += 1;
+      self.count
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+      impls::fill_bytes_via_next(self, dest)
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+      Ok(self.fill_bytes(dest))
+    }
+  }
+
+  #[test]
+  fn test_rng() {
+    use crate::rng::RecordingRng;
+
+    let mut rng = CountingRng { count: 0 };
+    let mut recorder = RecordingRng::new(&mut rng);
+
+    assert_eq!(recorder.next_u64(), 1);
+    assert_eq!(recorder.next_u64(), 2);
+
+    let mut buffer: [u8; 8] = [0x00; 8];
+    recorder.try_fill_bytes(&mut buffer).unwrap();
+    assert_eq!(buffer, [0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+    let mut playback = recorder.into_playback();
+    assert_eq!(playback.next_u64(), 1);
+    assert_eq!(playback.next_u64(), 2);
+    playback.try_fill_bytes(&mut buffer).unwrap();
+    assert_eq!(buffer, [0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+    // We've run out of playack - try some failure modes.
+    assert!(playback.try_fill_bytes(&mut buffer).is_err());
+
+    // It will be all zeroes, since we have no more playback
+    playback.fill_bytes(&mut buffer);
+    assert_eq!(buffer, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+  }
+
+}
