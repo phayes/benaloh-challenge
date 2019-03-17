@@ -9,6 +9,8 @@ rand = "0.6.5"
 digest = "0.8.0"
 zeroize = "0.5.2"
 rand_core = "0.3.1"
+failure = "0.1.5"
 
 [dev-dependencies]
 sha2 = "0.8.0"
+rsa = { git = "https://github.com/phayes/RSA", branch = "get_public"}

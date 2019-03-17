@@ -38,10 +38,8 @@ impl<'a, R: Rng> RngCore for RecordingRng<'a, R> {
   }
 
   fn fill_bytes(&mut self, dest: &mut [u8]) {
-    let mut bytes = Vec::<u8>::with_capacity(dest.len());
-    self.inner.fill_bytes(&mut bytes);
-    dest.clone_from_slice(&bytes);
-    self.recorded.append(&mut bytes);
+    self.inner.fill_bytes(dest);
+    self.recorded.extend_from_slice(dest);
   }
 
   fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
