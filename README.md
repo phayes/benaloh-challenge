@@ -1,16 +1,17 @@
-Benaloh Challenge
------------------
+## Benaloh Challenge
 
 [![Build Status](https://travis-ci.org/phayes/benaloh-challenge.svg?branch=master)](https://travis-ci.org/phayes/benaloh-challenge)
 [![codecov](https://codecov.io/gh/phayes/benaloh-challenge/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/benaloh-challenge)
-
+[![docs](https://docs.rs/fdh/badge.svg)](https://docs.rs/benaloh-challenge)
+[![crates.io](https://meritbadge.herokuapp.com/fdh)](https://crates.io/crates/benaloh-challenge)
 
 Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device. While orignially conceived in the context of voting using an electronic device, it is useful for all untrusted computations that are deterministic with the exception of using an RNG. Most cryptography fits in this category.
 
 More details on the protocol can be found here:
- - *Ballot Casting Assurance via Voter-Initiated Poll Station Auditing* by Josh Benaloh, 2007 [[pdf](https://www.usenix.org/legacy/event/evt07/tech/full_papers/benaloh/benaloh.pdf)]
- - *Proof of Vote: An end-to-end verifiable digital voting protocol using distributed ledger
-technology* by Becker et al, 2018 - section 3.2.7 [[pdf](https://github.com/votem/proof-of-vote/raw/master/proof-of-vote-whitepaper.pdf)]
+
+- _Ballot Casting Assurance via Voter-Initiated Poll Station Auditing_ by Josh Benaloh, 2007 [[pdf](https://www.usenix.org/legacy/event/evt07/tech/full_papers/benaloh/benaloh.pdf)]
+- _Proof of Vote: An end-to-end verifiable digital voting protocol using distributed ledger
+  technology_ by Becker et al, 2018 - section 3.2.7 [[pdf](https://github.com/votem/proof-of-vote/raw/master/proof-of-vote-whitepaper.pdf)]
 
 ### Example
 
