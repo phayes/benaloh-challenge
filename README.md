@@ -58,3 +58,26 @@ challenge.commit(&mut hasher);
 // but instead we get the results, discarding the random factors.
 let ciphertext = challenge.into_results();
 ```
+
+### Protocol Description
+
+This protocol takes place between a user, a trusted device, and an untrusted device. In this example the user will be Alice, the trusted device will be her cellphone, and the untrusted device will be a voting machine. The voting machine needs to do some untrusted computation using an RNG (encrypting Alice's vote), the details of which need to be kept secret from Alice so she can't prove to a 3rd party how she voted. However, the voting machine needs to assure Alice that it encrypted the vote correctly and didn't change her vote, without letting her know the secret random factors it used in it's encryption. 
+
+1. Alice marks her ballot on the voting machine. 
+
+2. When Alice is done, the voting machine encrypts her marked-ballot (using random factors from an RNG) and presents a one-way hash of her encrypted vote (for example via QR code). This one-way hash is known as the commitment. The voting machine provides two options to Alice: she may cast or challenge. 
+
+3. If alice chooses "cast" the voting machine writes the encrypted vote to disk and the process is done.
+
+4. If alice wishes to challenge she scans the commitment (hash of the encrypted vote) with her cellphone and selects "challenge" on the voting machine. 
+
+5. The voting machine transmits the marked-ballot and the random factors to Alice's cellphone (eg via video QR code). The cellphone checks the commitment by re-computing the commiment using the marked ballot and random factors, and compares it to the commitment that was scanned in step 4. If they are the same, the voting machine was honest with it's encryption of the vote. If they are different, the voting machine cheated and is now caught.
+
+6. Alice checks that the marked ballot shown on her cellphone is the same that she inputted into the voting machine.
+
+7. Alice, being satiesfied that the voting machine passed the challange, returns to step 1, (optionally) re-marking her ballot. Alice may repeat the protocol as many times as she wishes until she casts her ballot as per step 3. 
+
+
+The voting machine must produce the commitment before it knows wether it will be challanged or not.  If the voting machine tries to cheat (change the vote), it does not know if it will be challanged or if the vote will be cast before it must commit to the ciphertext of the encrytpted vote. This means that any attempt at cheating by the voting machine will have a *chance* of being caught. 
+
+In the context of an election, the Benaloh Challange ensues that systematic cheating by voting machines will be discoverd with a very high probability.  Changing a few votes has a decent chance of going undetected, but every time the voting machine cheats, it risks being caught if misjudges when a user might choose to challenge. 
