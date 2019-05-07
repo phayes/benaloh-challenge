@@ -2,12 +2,17 @@ use rand::Rng;
 use rand_core::{impls, Error, ErrorKind, RngCore};
 use zeroize::Zeroize;
 
+
+/// This recording RNG wraps a real RNG and records the random data as it is passed to the caller
+/// When it is dropped, the recording RNG calls `zeroize()` to zero the recorded data in memory.
 pub struct RecordingRng<'a, R: Rng> {
   inner: &'a mut R,
   recorded: Vec<u8>,
 }
 
 impl<'a, R: Rng> RecordingRng<'a, R> {
+
+  /// Create a new recording RNG from a real RNG
   pub fn new(rng: &'a mut R) -> Self {
     RecordingRng {
       inner: rng,
@@ -15,12 +20,15 @@ impl<'a, R: Rng> RecordingRng<'a, R> {
     }
   }
 
+  /// Fetch the recorded bytes. This consumes the recording RNG so it may no longer be used.
   pub fn fetch_recorded(&mut self) -> Vec<u8> {
     let recorded = self.recorded.drain(..).collect();
     self.recorded.zeroize();
     recorded
   }
 
+  /// Transform the recording RNG into a PlaybackRng for playback in `check_commitment`.
+  /// This comsumes the recording RNG so it may no longer be used.
   pub fn into_playback(self) -> PlaybackRng {
     PlaybackRng {
       recorded: self.recorded,
@@ -48,11 +56,15 @@ impl<'a, R: Rng> RngCore for RecordingRng<'a, R> {
   }
 }
 
+/// A static vector of bytes that masquerades as an RNG.
+/// This is used to check the commitment of a challange, and shouldn't be used anywhere else.
 pub struct PlaybackRng {
   recorded: Vec<u8>,
 }
 
 impl PlaybackRng {
+
+  /// Create a new playback RNG from a byte array.
   pub fn new(recorded: &[u8]) -> Self {
     PlaybackRng {
       recorded: recorded.to_vec(),
