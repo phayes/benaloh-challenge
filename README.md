@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/phayes/benaloh-challenge/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/benaloh-challenge)
 [![docs](https://docs.rs/fdh/badge.svg)](https://docs.rs/benaloh-challenge)
 [![crates.io](https://meritbadge.herokuapp.com/fdh)](https://crates.io/crates/benaloh-challenge)
+[![patreon](https://img.shields.io/badge/patreon-donate-green.svg)](https://patreon.com/phayes)
 
 Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device. While orignially conceived in the context of voting using an electronic device, it is useful for all untrusted computations that are deterministic with the exception of using an RNG. Most cryptography fits in this category.
 
@@ -80,3 +81,7 @@ This protocol takes place between a user, a trusted device, and an untrusted dev
 The voting machine must produce the commitment before it knows wether it will be challanged or not. If the voting machine tries to cheat (change the vote), it does not know if it will be challanged or if the vote will be cast before it must commit to the ciphertext of the encrytpted vote. This means that any attempt at cheating by the voting machine will have a _chance_ of being caught.
 
 In the context of an election, the Benaloh Challange ensues that systematic cheating by voting machines will be discoverd with a very high probability. Changing a few votes has a decent chance of going undetected, but every time the voting machine cheats, it risks being caught if misjudges when a user might choose to challenge.
+
+ ## Contributors
+ 
+ 1. Patrick Hayes ([linkedin](https://www.linkedin.com/in/patrickdhayes/)) ([github](https://github.com/phayes)) - Available for hire.
