@@ -5,7 +5,7 @@
 [![docs](https://docs.rs/fdh/badge.svg)](https://docs.rs/benaloh-challenge)
 [![crates.io](https://meritbadge.herokuapp.com/fdh)](https://crates.io/crates/benaloh-challenge)
 [![patreon](https://img.shields.io/badge/patreon-donate-green.svg)](https://patreon.com/phayes)
-[![patreon](https://img.shields.io/badge/flattr-donate-green.svg)](https://flattr.com/@phayes)
+[![flattr](https://img.shields.io/badge/flattr-donate-green.svg)](https://flattr.com/@phayes)
 
 Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device. While orignially conceived in the context of voting using an electronic device, it is useful for all untrusted computations that are deterministic with the exception of using an RNG. Most cryptography fits in this category.
 
