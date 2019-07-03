@@ -81,7 +81,7 @@ This protocol takes place between a user, a trusted device, and an untrusted dev
 
 The voting machine must produce the commitment before it knows wether it will be challanged or not. If the voting machine tries to cheat (change the vote), it does not know if it will be challanged or if the vote will be cast before it must commit to the ciphertext of the encrytpted vote. This means that any attempt at cheating by the voting machine will have a _chance_ of being caught.
 
-In the context of an election, the Benaloh Challange ensues that systematic cheating by voting machines will be discoverd with a very high probability. Changing a few votes has a decent chance of going undetected, but every time the voting machine cheats, it risks being caught if it misjudges when a user might choose to challenge.
+In the context of an election, the Benaloh Challange ensues that systematic cheating by voting machines will be discoverd with a very high probability. While changing a very small number of votes may go undetected, every time the voting machine cheats, it risks being caught if it misjudges when a user might choose to challenge.
 
 ## Contributors
 
