@@ -18,7 +18,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 rand = "0.6.5"
 digest = "0.8.0"
-zeroize = "0.6.0"
+zeroize = "1.0.0"
 rand_core = "0.4.0"
 failure = "0.1.5"
 
