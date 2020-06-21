@@ -12,7 +12,7 @@
 //! // Untrusted computation that is deterministic with the exception of an RNG
 //! // For this example we encrypt a vote for an election using RSA.
 //! fn untrusted_computation<R: Rng>(rng: &mut R, key: &RSAPublicKey, message: &[u8]) -> Vec<u8> {
-//!     let ciphertext = key.encrypt(rng, PaddingScheme::PKCS1v15, message).unwrap();
+//!     let ciphertext = key.encrypt(rng, PaddingScheme::PKCS1v15Encrypt, message).unwrap();
 //!     return ciphertext;
 //! };
 //!
@@ -106,7 +106,6 @@ impl<'a, R: Rng, C> Challenge<'a, R, C>
 where
     C: Fn(&mut RecordingRng<'a, R>) -> Vec<u8>,
 {
-
     /// Create a new benaloh challenge with the given RNG and untrusted computation.
     ///
     /// While this method takes a closure, it is generally recommended to create a separate `untrusted_computation` function and wrap it in the closure.
@@ -148,8 +147,8 @@ where
     pub fn commit<H: Digest>(&mut self, hasher: &mut H) -> Vec<u8> {
         self.result = (self.computation)(&mut self.rng);
         self.cached_random = self.rng.fetch_recorded();
-        hasher.input(&self.result);
-        let commitment = hasher.result_reset().to_vec();
+        hasher.update(&self.result);
+        let commitment = hasher.finalize_reset().to_vec();
         self.committed = true;
 
         commitment
@@ -196,8 +195,8 @@ where
 {
     let mut playback = PlaybackRng::new(revealed_random);
     let result = (untrusted_computation)(&mut playback);
-    hasher.input(result);
-    if hasher.result_reset().to_vec() != commitment.to_vec() {
+    hasher.update(result);
+    if hasher.finalize_reset().to_vec() != commitment.to_vec() {
         return Err(Error::VerificationFailed);
     }
     Ok(())
@@ -252,7 +251,7 @@ mod tests {
             // TODO: return Result<(), Error>
 
             let ciphertext = public_key
-                .encrypt(rng, PaddingScheme::PKCS1v15, message)
+                .encrypt(rng, PaddingScheme::PKCS1v15Encrypt, message)
                 .unwrap();
 
             ciphertext
@@ -261,10 +260,12 @@ mod tests {
         let mut rng = rand::thread_rng();
         let mut hasher = Sha256::new();
         let key = RSAPrivateKey::new(&mut rng, 512).unwrap();
+        let public_key = key.to_public_key();
         let message = b"Barak Obama";
 
-        let mut challenge =
-            Challenge::new(&mut rng, |rng: _| untrusted_computation(rng, &key, message));
+        let mut challenge = Challenge::new(&mut rng, |rng: _| {
+            untrusted_computation(rng, &public_key, message)
+        });
 
         // Get the commitment
         let commitment = challenge.commit(&mut hasher);
@@ -274,7 +275,7 @@ mod tests {
 
         // Check the challenge on a different (trusted) device.
         check_commitment(&mut hasher, &commitment, &revealed, |rng: _| {
-            untrusted_computation(rng, &key, message)
+            untrusted_computation(rng, &public_key, message)
         })?;
 
         // Get the real results, discarding the random factors.
