@@ -1,6 +1,6 @@
 [package]
 name = "benaloh-challenge"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
 description = "Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device."
@@ -23,5 +23,5 @@ rand_core = "0.5.1"
 failure = "0.1.8"
 
 [dev-dependencies]
-sha2 = "0.9.0"
+sha2 = "0.9.1"
 rsa = "0.3.0"
