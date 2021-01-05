@@ -16,7 +16,7 @@ codecov = { repository = "phayes/benaloh-challenge", branch = "master", service 
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-rand = "0.7.3"
+rand = "0.8.1"
 digest = "0.9.0"
 zeroize = "1.1.0"
 rand_core = "0.5.1"
