@@ -1,13 +1,13 @@
 [package]
 name = "benaloh-challenge"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "Implements the Benaloh Challenge (also known as an Interactive Device Challenge), a crytographic technique to ensure the honesty of an untrusted device."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/phayes/benaloh-challenge"
 readme = "README.md"
-keywords = ["crypto", "voting"]
+keywords = ["cryptography", "voting"]
 categories = ["cryptography"]
 
 [badges]
@@ -16,12 +16,12 @@ codecov = { repository = "phayes/benaloh-challenge", branch = "master", service 
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-rand = "0.7.3"
-digest = "0.9.0"
+rand = "0.8"
+digest = "0.10"
 zeroize = "1.1.1"
-rand_core = "0.5.1"
-failure = "0.1.8"
+rand_core = "0.6"
+thiserror = "1"
 
 [dev-dependencies]
-sha2 = "0.9.2"
-rsa = "0.3.0"
+sha2 = "0.10"
+rsa = "0.7"

@@ -4,21 +4,21 @@
 //!
 //! ```
 //! use benaloh_challenge;
-//! use rand::Rng;
+//! use rand::{Rng, CryptoRng};
 //! use sha2::{Sha256, Digest};
 //! use rsa::padding::PaddingScheme;
-//! use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
+//! use rsa::{PublicKey, RsaPrivateKey, RsaPublicKey};
 //!
 //! // Untrusted computation that is deterministic with the exception of an RNG
 //! // For this example we encrypt a vote for an election using RSA.
-//! fn untrusted_computation<R: Rng>(rng: &mut R, key: &RSAPublicKey, message: &[u8]) -> Vec<u8> {
+//! fn untrusted_computation<R: Rng + CryptoRng>(rng: &mut R, key: &RsaPublicKey, message: &[u8]) -> Vec<u8> {
 //!     let ciphertext = key.encrypt(rng, PaddingScheme::PKCS1v15Encrypt, message).unwrap();
 //!     return ciphertext;
 //! };
 //!
 //! let mut rng = rand::thread_rng();
 //! let mut hasher = Sha256::new();
-//! let public_key = RSAPrivateKey::new(&mut rng, 512).unwrap().to_public_key();
+//! let public_key = RsaPrivateKey::new(&mut rng, 512).unwrap().to_public_key();
 //! let vote = b"Barak Obama";
 //!
 //! let mut challenge = benaloh_challenge::Challenge::new(&mut rng, |rng: _| {
@@ -71,10 +71,9 @@
 //!
 //! In the context of an election, the Benaloh Challange ensues that systematic cheating by voting machines will be discoverd with a very high probability. Changing a few votes has a decent chance of going undetected, but every time the voting machine cheats, it risks being caught if misjudges when a user might choose to challenge.=
 
-use digest::Digest;
-use failure::Error as FailError;
-use failure::Fail;
-use rand::Rng;
+use digest::{Digest, FixedOutputReset};
+use thiserror::Error;
+use rand::{RngCore, CryptoRng};
 use zeroize::Zeroize;
 
 mod rng;
@@ -82,16 +81,14 @@ pub use rng::PlaybackRng;
 pub use rng::RecordingRng;
 
 /// Error types
-#[derive(Debug, Fail)]
+#[derive(Error, Debug)]
 pub enum Error {
-    #[fail(display = "benaloh_challenge: failed verification - commitments do not match")]
+    #[error("benaloh_challenge: failed verification - commitments do not match")]
     VerificationFailed,
-    #[fail(display = "benaloh_challenge: failed verification: {}", 0)]
-    VerificationError(FailError),
 }
 
 /// A benaloh challenge that wraps untrusted computation in a way that can be challanged.
-pub struct Challenge<'a, R: Rng, C>
+pub struct Challenge<'a, R: RngCore + CryptoRng, C>
 where
     C: Fn(&mut RecordingRng<'a, R>) -> Vec<u8>, // TODO: Return a result.
 {
@@ -102,7 +99,7 @@ where
     committed: bool,
 }
 
-impl<'a, R: Rng, C> Challenge<'a, R, C>
+impl<'a, R: RngCore + CryptoRng, C> Challenge<'a, R, C>
 where
     C: Fn(&mut RecordingRng<'a, R>) -> Vec<u8>,
 {
@@ -144,11 +141,11 @@ where
     /// Commit the results and get the commitment
     ///
     /// This method generates both the results and the commitment, so must be called before `into_results()` is called.
-    pub fn commit<H: Digest>(&mut self, hasher: &mut H) -> Vec<u8> {
+    pub fn commit<H: Digest + FixedOutputReset>(&mut self, hasher: &mut H) -> Vec<u8> {
         self.result = (self.computation)(&mut self.rng);
         self.cached_random = self.rng.fetch_recorded();
-        hasher.update(&self.result);
-        let commitment = hasher.finalize_reset().to_vec();
+        Digest::update(hasher, &self.result);
+        let commitment = hasher.finalize_fixed_reset().to_vec();
         self.committed = true;
 
         commitment
@@ -184,7 +181,7 @@ where
 /// This should be done on a different device seperately from the device being challenged.
 ///
 /// This function will return an error if verification of the challenge failed (meaning the challenged device attempted to cheat).
-pub fn check_commitment<H: Digest, C>(
+pub fn check_commitment<H: Digest + FixedOutputReset, C>(
     hasher: &mut H,
     commitment: &[u8],
     revealed_random: &[u8],
@@ -195,8 +192,8 @@ where
 {
     let mut playback = PlaybackRng::new(revealed_random);
     let result = (untrusted_computation)(&mut playback);
-    hasher.update(result);
-    if hasher.finalize_reset().to_vec() != commitment.to_vec() {
+    Digest::update( hasher, result);
+    if hasher.finalize_fixed_reset().to_vec() != commitment.to_vec() {
         return Err(Error::VerificationFailed);
     }
     Ok(())
@@ -206,8 +203,7 @@ where
 mod tests {
     use crate::check_commitment;
     use crate::{Challenge, Error};
-    use rand;
-    use rand::Rng;
+    use rand::{self, Rng, CryptoRng, RngCore};
     use sha2::{Digest, Sha256};
 
     #[test]
@@ -216,7 +212,7 @@ mod tests {
             let mut bytes = vec![0; 8];
             rng.fill_bytes(&mut bytes);
             return bytes.to_vec();
-        };
+        }
 
         let mut rng = rand::thread_rng();
         let mut hasher = Sha256::new();
@@ -241,9 +237,9 @@ mod tests {
     #[test]
     fn rsa_test() -> Result<(), Error> {
         use rsa::padding::PaddingScheme;
-        use rsa::{PublicKey, RSAPrivateKey};
+        use rsa::{PublicKey, RsaPrivateKey};
 
-        fn untrusted_computation<R: Rng, K: PublicKey>(
+        fn untrusted_computation<R: RngCore + CryptoRng, K: PublicKey>(
             rng: &mut R,
             public_key: &K,
             message: &[u8],
@@ -255,11 +251,11 @@ mod tests {
                 .unwrap();
 
             ciphertext
-        };
+        }
 
         let mut rng = rand::thread_rng();
         let mut hasher = Sha256::new();
-        let key = RSAPrivateKey::new(&mut rng, 512).unwrap();
+        let key = RsaPrivateKey::new(&mut rng, 512).unwrap();
         let public_key = key.to_public_key();
         let message = b"Barak Obama";
 
@@ -292,7 +288,7 @@ mod tests {
             let mut bytes = vec![0; 8];
             rng.fill_bytes(&mut bytes);
             return bytes.to_vec();
-        };
+        }
 
         let incrementing = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let mut rng = PlaybackRng::new(&incrementing);

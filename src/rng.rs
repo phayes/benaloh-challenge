@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{Rng, CryptoRng};
 use rand_core::{impls, Error, RngCore};
 use zeroize::Zeroize;
 
@@ -54,6 +54,8 @@ impl<'a, R: Rng> RngCore for RecordingRng<'a, R> {
     }
 }
 
+impl<'a, R: RngCore + CryptoRng> CryptoRng for RecordingRng<'a, R> {}
+
 /// A static vector of bytes that masquerades as an RNG.
 /// This is used to check the commitment of a challange, and shouldn't be used anywhere else.
 pub struct PlaybackRng {
@@ -98,6 +100,8 @@ impl RngCore for PlaybackRng {
         }
     }
 }
+
+impl CryptoRng for PlaybackRng {}
 
 mod test {
     use rand_core::{impls, Error, RngCore};
